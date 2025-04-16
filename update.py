@@ -7,7 +7,6 @@ from urllib import parse
 PLACEHOLDER = "<!-- 이 위치에 자동 생성을 구현하고 싶습니다. -->"
 
 HEADER = """# 
-## 📚 알고리즘 문제 풀이 목록 (백준 & 프로그래머스)
 
 """
 
@@ -42,11 +41,11 @@ def main():
     for directory, entries in data.items():
         problem_count = len(entries)
         if directory in ["백준", "프로그래머스"]:
-            generated_content += "## 📚 {} (문제 수: {})\n".format(directory, problem_count)
+            generated_content += "### 📚 {} (문제 수: {})\n".format(directory, problem_count)
             for category, file_path in entries:
                 generated_content += "| {} | [링크]({}) |\n".format(category, parse.quote(file_path))
         else:
-            generated_content += "### 🚀 {} (문제 수: {})\n".format(directory, problem_count)
+            generated_content += "#### 🚀 {} (문제 수: {})\n".format(directory, problem_count)
             generated_content += "| 문제번호 | 링크 |\n"
             generated_content += "| ----- | ----- |\n"
             for category, file_path in entries:
