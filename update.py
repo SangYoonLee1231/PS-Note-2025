@@ -35,6 +35,8 @@ def main():
         if directory not in data:
             data[directory] = []
         for file in files:
+            if not (file.endswith(".js") or file.endswith(".py")):
+                continue
             file_path = os.path.join(root, file)
             data[directory].append((category, file_path))
 
