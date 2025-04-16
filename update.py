@@ -63,14 +63,11 @@ def main():
     except FileNotFoundError:
         readme_old = ""
 
-    # 이미 마커가 존재하면 해당 블록을 교체하고, 없으면 파일 끝에 추가
-    if START_MARKER in readme_old and END_MARKER in readme_old:
-        before, rest = readme_old.split(START_MARKER, 1)
-        # rest에서 END_MARKER를 기준으로 분할 (앞 부분은 기존 블록, 뒷 부분은 이후 내용)
-        _, after = rest.split(END_MARKER, 1)
-        new_readme = before + auto_gen_block + after
-    else:
-        new_readme = readme_old + "\n\n" + auto_gen_block
+    import re
+    # 기존의 생성 콘텐츠 블록(시작/끝 마커로 둘러싸인)을 모두 제거
+    pattern = re.compile(r"{}\s*.*?\s*{}".format(re.escape(START_MARKER), re.escape(END_MARKER)), re.DOTALL)
+    cleaned_readme = pattern.sub("", readme_old).strip()
+    new_readme = cleaned_readme + "\n\n" + auto_gen_block + "\n"
 
     with open("README.md", "w") as fd:
         fd.write(new_readme)
