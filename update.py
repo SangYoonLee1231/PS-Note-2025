@@ -7,8 +7,8 @@ from urllib import parse
 START_MARKER = "<!-- auto-gen-start -->"
 END_MARKER = "<!-- auto-gen-end -->"
 
-HEADER = """# 
-## 알고리즘 문제 풀이 목록 (백준 & 프로그래머스)
+HEADER = """
+
 
 """
 
