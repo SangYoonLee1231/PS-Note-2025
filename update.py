@@ -1,71 +1,80 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
-from urllib.parse import quote
+from urllib import parse
 
-# 마커: README.md 파일 내에 이 부분을 찾아 자동 생성 콘텐츠로 교체합니다.
-MARKER = "<!-- 이 위치에 자동 생성을 구현하고 싶습니다. -->"
+# 자동 생성 콘텐츠 블록의 시작/끝 마커
+START_MARKER = "<!-- auto-gen-start -->"
+END_MARKER = "<!-- auto-gen-end -->"
 
-# 생성되는 콘텐츠의 상단 헤더 (필요에 따라 수정 가능)
-HEADER = "## 📚 알고리즘 문제 풀이 목록 (백준 & 프로그래머스)\n\n"
+HEADER = """# 
+## 알고리즘 문제 풀이 목록 (백준 & 프로그래머스)
+
+"""
 
 def main():
     data = {}
-    # 현재 디렉터리 내의 모든 파일을 순회합니다.
-    # .git, .github 등 불필요한 폴더는 제외합니다.
+    # os.walk로 디렉터리 순회 (루트 디렉터리 제외)
     for root, dirs, files in os.walk("."):
-        if root == ".":
-            for skip in [".git", ".github"]:
+        # 최상위(root)에서 .git, .github 폴더 제외
+        if root == '.':
+            for skip in ['.git', '.github']:
                 if skip in dirs:
                     dirs.remove(skip)
             continue
-        
-        # 해당 경로의 폴더 이름을 문제 카테고리로 사용합니다.
+
         category = os.path.basename(root)
-        # 예를 들어, images 폴더 등은 무시합니다.
-        if category.lower() == "images":
+        if category == 'images':  # images 폴더는 무시
             continue
 
-        # 상위 디렉터리의 이름을 기반으로 문제 사이트(예: 백준, 프로그래머스 등)로 분류합니다.
-        parent = os.path.basename(os.path.dirname(root))
-        if parent == ".":
+        # 상위 디렉터리 이름을 카테고리로 사용 (예: 백준, 프로그래머스, 그 외)
+        directory = os.path.basename(os.path.dirname(root))
+        if directory == '.':
             continue
-        
-        if parent not in data:
-            data[parent] = []
+
+        if directory not in data:
+            data[directory] = []
         for file in files:
             file_path = os.path.join(root, file)
-            data[parent].append((category, file_path))
-    
-    # 자동 생성될 콘텐츠를 구성합니다.
-    generated_body = HEADER
-    for site, items in data.items():
-        count = len(items)
-        # 각 사이트별 문제 개수를 제목에 표기합니다.
-        generated_body += f"### {site} (문제 개수: {count})\n\n"
-        generated_body += "| 문제 카테고리 | 링크 |\n"
-        generated_body += "| --- | --- |\n"
-        for problem_category, file_path in items:
-            generated_body += f"| {problem_category} | [링크]({quote(file_path)}) |\n"
-        generated_body += "\n"
-    
-    # 기존 README.md 파일을 읽어옵니다.
-    try:
-        with open("README.md", "r", encoding="utf-8") as f:
-            content = f.read()
-    except FileNotFoundError:
-        content = ""
-    
-    # 마커가 있으면 해당 부분을 자동 생성된 콘텐츠로 완전히 대체합니다.
-    if MARKER in content:
-        new_content = content.replace(MARKER, generated_body)
-    else:
-        # 마커가 없으면 파일 끝에 추가합니다.
-        new_content = content + "\n\n" + generated_body
-    
-    # 최종 결과를 README.md 파일에 저장합니다.
-    with open("README.md", "w", encoding="utf-8") as f:
-        f.write(new_content)
+            data[directory].append((category, file_path))
 
-if __name__ == '__main__':
+    generated_body = HEADER
+    
+    # 생성된 문제 목록 및 문제 개수 표시
+    for directory, entries in data.items():
+        problem_count = len(entries)
+        if directory in ["백준", "프로그래머스"]:
+            generated_body += "### 📚 {} (문제 수: {})\n".format(directory, problem_count)
+            for category, file_path in entries:
+                generated_body += "| {} | [링크]({}) |\n".format(category, parse.quote(file_path))
+        else:
+            generated_body += "#### 🚀 {} (문제 수: {})\n".format(directory, problem_count)
+            generated_body += "| 문제번호 | 링크 |\n"
+            generated_body += "| ----- | ----- |\n"
+            for category, file_path in entries:
+                generated_body += "| {} | [링크]({}) |\n".format(category, parse.quote(file_path))
+
+    # 자동 생성 콘텐츠 블록 (마커 포함)
+    auto_gen_block = START_MARKER + "\n" + generated_body + "\n" + END_MARKER
+
+    # 기존 README.md 파일 읽어오기 (파일 없으면 빈 문자열)
+    try:
+        with open("README.md", "r") as fd:
+            readme_old = fd.read()
+    except FileNotFoundError:
+        readme_old = ""
+
+    # 이미 마커가 존재하면 해당 블록을 교체하고, 없으면 파일 끝에 추가
+    if START_MARKER in readme_old and END_MARKER in readme_old:
+        before, rest = readme_old.split(START_MARKER, 1)
+        # rest에서 END_MARKER를 기준으로 분할 (앞 부분은 기존 블록, 뒷 부분은 이후 내용)
+        _, after = rest.split(END_MARKER, 1)
+        new_readme = before + auto_gen_block + after
+    else:
+        new_readme = readme_old + "\n\n" + auto_gen_block
+
+    with open("README.md", "w") as fd:
+        fd.write(new_readme)
+
+if __name__ == "__main__":
     main()
