@@ -46,7 +46,7 @@ def main():
     for directory, entries in data.items():
         problem_count = len(entries)
         if directory in ["백준", "프로그래머스"]:
-            generated_body += "### 📚 {} (문제 수: {})\n".format(directory, problem_count)
+            generated_body += "### 📚 {}\n".format(directory)
             for category, file_path in entries:
                 generated_body += "| {} | [링크]({}) |\n".format(category, parse.quote(file_path))
         else:
